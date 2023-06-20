@@ -7,14 +7,14 @@ try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
     from yaml import Loader,Dumper
-
+from utils.load_models import load_model
 
 if __name__ == "__main__":   
     parser = argparse.ArgumentParser()
     parser.add_argument("--config_path",type=str,default="config.yml",help="config file path")
     parser.add_argument("--port",type=int,help="which port to use")
     parser.add_argument("--logging_mode",type=bool,default=False,help="whether record")
-    parser.add_argument("--llm_type",type=str,help="which large language model to use")
+    parser.add_argument("--llm_type",default="chatglm6b",type=str,help="which large language model to use")
     args = parser.parse_args()
 
     class dotdict(dict):
@@ -86,3 +86,24 @@ if __name__ == "__main__":
         def __exit__(self, exc_type, exc_val, exc_tb):  # 实现 __exit__() 方法，用于在 with 语句的结束释放锁
             self.release()
     
+    ## 打印settings
+    import os
+    print(os.path.abspath("."))
+    print("\n")
+    for k,v in settings.items():
+        print(f"{k}:{v}\n")
+    print("\n")
+    
+    print(f"settings.llm:{settings.llm}")
+    ##
+    if settings.logging:
+        pass # 记录日志
+
+    # 根据config中llm加载相应模块
+    from importlib import import_module
+    try:
+        module = import_module(f"llms.llm_{settings.llm_type}")
+    except Exception as e:
+        print("LLM模型加载失败",e)
+        
+    model = load_model(settings.llm_type)
